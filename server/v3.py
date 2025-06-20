@@ -19,6 +19,7 @@ chroma_client = chromadb.PersistentClient(path="./chroma_db")
 collection = chroma_client.get_or_create_collection(name="usuarios")
 usuarios_formulario_completado = set()
 
+# Define possible objectives
 OBJETIVOS = {
     "vender": ["comprar", "adquirir", "quiero comprar", "me interesa", "precio", "costo"],
     "consultar": ["información", "detalles", "características", "especificaciones", "consultar"],
@@ -73,7 +74,7 @@ def obtener_estadisticas() -> dict:
         if objetivos and isinstance(objetivos, dict) and "metadatas" in objetivos and objetivos["metadatas"]:
             for obj in objetivos["metadatas"]:
                 if isinstance(obj, dict) and "tipo" in obj and "estado" in obj:
-                    tipo = str(obj["tipo"])
+                    tipo = obj["tipo"]
                     if tipo in total_objetivos:
                         total_objetivos[tipo] += 1
                         if obj["estado"] == "cumplido":
@@ -137,7 +138,7 @@ def obtener_productos():
                 return "\n".join(productos_formateados)
             return "No hay productos disponibles"
             
-        return f"Error al obtener productos: Codigo {response.status_code}"
+        return f"Error al obtener productos: Código {response.status_code}"
     except requests.exceptions.ConnectionError:
         return "Error: No se pudo conectar con la API de productos"
     except requests.exceptions.RequestException as e:
@@ -145,6 +146,7 @@ def obtener_productos():
     except Exception as e:
         return f"Error al obtener productos: {str(e)}"
 
+# Define the prompt with better system instructions
 prompt = ChatPromptTemplate.from_messages([
     ("system", """Eres un asistente de ventas en CommerIA. Tu tarea es:
     1. Detectar las intenciones del usuario (vender, consultar, agendar cita)
@@ -215,29 +217,14 @@ def recibir_formulario():
         numero = data.get("numero", "")
         producto = data.get("producto", "")
         agendar_cita = data.get("agendarCita", "no")
-        fecha_objetivo = data.get("fechaObjetivo", "")
-        fecha_cita = data.get("fechaCita", "")
 
         user_id = f"user_{cedula}"
-        document_text = (
-            f"Nombre: {nombre}, Cedula: {cedula}, Email: {email}, Teléfono: {numero}, "
-            f"Producto: {producto}, Agendar Cita: {agendar_cita}, "
-            f"Fecha Objetivo: {fecha_objetivo}, Fecha Cita: {fecha_cita}"
-        )
+        document_text = f"Nombre: {nombre}, Cedula: {cedula}, Email: {email}, Teléfono: {numero}, Producto: {producto}, Agendar Cita: {agendar_cita}"
 
         collection.add(
-            ids=[user_id],
+            ids=[user_id], 
             documents=[document_text],
-            metadatas=[{
-                "nombre": nombre,
-                "cedula": cedula,
-                "email": email,
-                "numero": numero,
-                "producto": producto,
-                "agendarCita": agendar_cita,
-                "fecha": fecha_objetivo,
-                "fecha_cita": fecha_cita
-            }]
+            metadatas=[{"nombre": nombre, "cedula": cedula, "email": email, "numero": numero, "producto": producto, "agendarCita": agendar_cita}]
         )
 
         return jsonify({"message": "Formulario recibido y almacenado correctamente en ChromaDB"})
@@ -260,131 +247,6 @@ def obtener_estadisticas_citas():
 
     except Exception as e:
         print("Error en el servidor:", e)
-        return jsonify({"error": str(e)}), 500
-
-@app.route("/mensajes_totales", methods=["GET"])
-def obtener_mensajes_totales():
-    try:
-        mensajes = collection.get()
-        total_mensajes = {
-            "usuario": 0,
-            "bot": 0
-        }
-        
-        if mensajes and isinstance(mensajes, dict) and "metadatas" in mensajes and mensajes["metadatas"]:
-            for msg in mensajes["metadatas"]:
-                if isinstance(msg, dict) and "tipo" in msg:
-                    tipo = msg["tipo"]
-                    if tipo in total_mensajes:
-                        total_mensajes[tipo] += 1
-        
-        return jsonify({
-            "mensajes": [
-                total_mensajes["usuario"],
-                total_mensajes["bot"]
-            ],
-            "labels": ["Mensajes Usuario", "Mensajes Bot"]
-        })
-
-    except Exception as e:
-        print("Error en el servidor:", e)
-        return jsonify({"error": str(e)}), 500
-
-@app.route("/objetivos_totales", methods=["GET"])
-def obtener_objetivos_totales():
-    try:
-        objetivos = collection.get()
-        total_objetivos = {"vender": 0, "consultar": 0, "agendar_cita": 0}
-        cumplidos_objetivos = {"vender": 0, "consultar": 0, "agendar_cita": 0}
-
-        if objetivos and isinstance(objetivos, dict) and "metadatas" in objetivos and objetivos["metadatas"]:
-            for obj in objetivos["metadatas"]:
-                if isinstance(obj, dict) and "tipo" in obj and "estado" in obj:
-                    tipo = str(obj["tipo"])
-                    if tipo in total_objetivos:
-                        total_objetivos[tipo] += 1
-                        if obj["estado"] == "cumplido":
-                            cumplidos_objetivos[tipo] += 1
-
-        return jsonify({
-            "total_vender": total_objetivos["vender"],
-            "total_consultar": total_objetivos["consultar"],
-            "total_agendar": total_objetivos["agendar_cita"],
-            "cumplidos_vender": cumplidos_objetivos["vender"],
-            "cumplidos_consultar": cumplidos_objetivos["consultar"],
-            "cumplidos_agendar": cumplidos_objetivos["agendar_cita"]
-        })
-
-    except Exception as e:
-        print("Error en el servidor:", e)
-        return jsonify({"error": str(e)}), 500
-
-@app.route("/objetivos_cumplidos", methods=["GET"])
-def obtener_objetivos_cumplidos():
-    try:
-        objetivos = collection.get()
-        objetivos_cumplidos = {
-            "vender": {"total": 0, "por_producto": {}},
-            "consultar": {"total": 0, "por_tipo": {}},
-            "agendar_cita": {"total": 0, "por_fecha": {}}
-        }
-
-        if objetivos and isinstance(objetivos, dict) and "metadatas" in objetivos and objetivos["metadatas"]:
-            for obj in objetivos["metadatas"]:
-                if isinstance(obj, dict) and "tipo" in obj and "estado" in obj:
-                    tipo = str(obj["tipo"])
-                    if tipo in objetivos_cumplidos and obj["estado"] == "cumplido":
-                        objetivos_cumplidos[tipo]["total"] += 1
-                        
-                        # Agrupar por detalles específicos según el tipo
-                        if tipo == "vender" and "producto" in obj:
-                            producto = str(obj["producto"])
-                            objetivos_cumplidos[tipo]["por_producto"][producto] = \
-                                objetivos_cumplidos[tipo]["por_producto"].get(producto, 0) + 1
-                        elif tipo == "consultar" and "tipo_consulta" in obj:
-                            tipo_consulta = str(obj["tipo_consulta"])
-                            objetivos_cumplidos[tipo]["por_tipo"][tipo_consulta] = \
-                                objetivos_cumplidos[tipo]["por_tipo"].get(tipo_consulta, 0) + 1
-                        elif tipo == "agendar_cita" and "fecha" in obj:
-                            fecha = str(obj["fecha"])
-                            objetivos_cumplidos[tipo]["por_fecha"][fecha] = \
-                                objetivos_cumplidos[tipo]["por_fecha"].get(fecha, 0) + 1
-
-        return jsonify(objetivos_cumplidos)
-
-    except Exception as e:
-        print("Error en el servidor:", e)
-        return jsonify({"error": str(e)}), 500
-
-# Endpoint for the monthly performance chart (now overall performance)
-@app.route("/rendimiento_mensual", methods=["GET"])
-def obtener_rendimiento():
-    try:
-        stats = obtener_estadisticas() # Reutilizamos la función que ya calcula los totales
-        
-        if "error" in stats:
-            return jsonify(stats), 500
-
-        labels = ["Vender", "Consultar", "Agendar Cita"]
-        objetivos_totales = [
-            stats.get("total_vender", 0),
-            stats.get("total_consultar", 0),
-            stats.get("total_agendar", 0)
-        ]
-        objetivos_cumplidos = [
-            stats.get("cumplidos_vender", 0),
-            stats.get("cumplidos_consultar", 0),
-            stats.get("cumplidos_agendar", 0)
-        ]
-
-        return jsonify({
-            "labels": labels,
-            "objetivos_totales": objetivos_totales,
-            "objetivos_cumplidos": objetivos_cumplidos
-        })
-
-    except Exception as e:
-        print("Error en el endpoint /rendimiento_mensual:", e)
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":

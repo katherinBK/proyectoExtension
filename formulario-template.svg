@@ -1,0 +1,61 @@
+<svg width="370" height="580" viewBox="0 0 370 580" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background and Styles -->
+  <defs>
+    <style>
+      .title { font: 600 16px sans-serif; fill: #FFFFFF; }
+      .label { font: 500 13px sans-serif; fill: #CCCCCC; }
+      .input-text { font: 400 14px sans-serif; fill: #FFFFFF; }
+      .button-text { font: 600 14px sans-serif; fill: #FFFFFF; text-anchor: middle; }
+    </style>
+  </defs>
+
+  <!-- Form Container -->
+  <rect width="370" height="580" rx="10" ry="10" fill="#333333" stroke="#404040" stroke-width="1"/>
+
+  <!-- Title -->
+  <text x="20" y="40" class="title">Completa tus datos</text>
+
+  <!-- Form Fields -->
+  <g id="form-fields" transform="translate(20, 65)">
+    <!-- Nombre -->
+    <rect x="0" y="0" width="330" height="40" rx="5" ry="5" fill="#404040" stroke="#555555" stroke-width="1"/>
+    <text x="10" y="25" class="input-text" fill="#AAAAAA">Nombre</text>
+
+    <!-- C.I. -->
+    <rect x="0" y="55" width="330" height="40" rx="5" ry="5" fill="#404040" stroke="#555555" stroke-width="1"/>
+    <text x="10" y="80" class="input-text" fill="#AAAAAA">C.I.</text>
+
+    <!-- Email -->
+    <rect x="0" y="110" width="330" height="40" rx="5" ry="5" fill="#404040" stroke="#555555" stroke-width="1"/>
+    <text x="10" y="135" class="input-text" fill="#AAAAAA">Email</text>
+
+    <!-- Teléfono -->
+    <rect x="0" y="165" width="330" height="40" rx="5" ry="5" fill="#404040" stroke="#555555" stroke-width="1"/>
+    <text x="10" y="190" class="input-text" fill="#AAAAAA">Teléfono</text>
+
+    <!-- Producto -->
+    <rect x="0" y="220" width="330" height="40" rx="5" ry="5" fill="#404040" stroke="#555555" stroke-width="1"/>
+    <text x="10" y="245" class="input-text" fill="#AAAAAA">Producto</text>
+
+    <!-- Radio Buttons -->
+    <text x="0" y="290" class="label">¿Desea agendar cita?</text>
+    <circle cx="10" cy="315" r="6" stroke="#CCCCCC" stroke-width="1.5" fill="none"/>
+    <text x="25" y="320" class="label">Sí</text>
+    <circle cx="60" cy="315" r="6" stroke="#CCCCCC" stroke-width="1.5" fill="none"/>
+    <circle cx="60" cy="315" r="3" fill="#CCCCCC"/>
+    <text x="75" y="320" class="label">No</text>
+    
+    <!-- Conditional Date Input -->
+    <g id="date-input-conditional">
+      <text x="0" y="360" class="label">Fecha de la cita presencial</text>
+      <rect x="0" y="375" width="330" height="40" rx="5" ry="5" fill="#404040" stroke="#6f42c1" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <text x="10" y="400" class="input-text" fill="#AAAAAA">YYYY-MM-DD</text>
+      <path d="M310 385 L310 405 M300 395 L320 395" stroke="#AAAAAA" stroke-width="1"/>
+    </g>
+
+    <!-- Submit Button -->
+    <rect x="0" y="440" width="330" height="45" rx="5" ry="5" fill="#28a745"/>
+    <text x="165" y="468" class="button-text">Enviar Datos</text>
+
+  </g>
+</svg> 
